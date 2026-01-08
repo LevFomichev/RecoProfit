@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: Recommendation-API
+  description: API для рекомендации товаров пользователям на основе модели *XGBoost*
+  contact:
+    name: API Support
+    email: Mr.LevFomichev@gmail.com
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/thrxlxs/Recommendation-API/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: http://localhost:5000
+  description: Development server
+tags:
+- name: Recommendations
+  description: Получение рекомендаций товаров
+- name: Users
+  description: Информация о пользователях
+- name: Health
+  description: Проверка работоспособности
+paths:
+  /:
+    get:
+      tags:
+      - Health
+      summary: Главная страница API
+      description: Информация о API и доступных эндпоинтах
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              example:
+                message: Recommendation API
+                endpoints:
+                  /recommend/{user_id}: GET - рекомендации для пользователя
+                  /recommend: POST - рекомендации с кастомными параметрами
+                  /user_info/{user_id}: GET - информация о пользователе
+                  /health: GET - проверка работоспособности
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Проверка работоспособности
+      responses:
+        "200":
+          description: API работает
+          content:
+            application/json:
+              example:
+                status: healthy
+                service: recommendation-api
+                timestamp: 2024-01-06T10:30:00.000Z
+  /recommend/{user_id}:
+    get:
+      tags:
+      - Recommendations
+      summary: Рекомендации для пользователя
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 12345
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              example:
+                user_id: 12345
+                recommendations:
+                - item_id: 78901
+                  probability: 0.856
+                  rank: 1
+                - item_id: 78902
+                  probability: 0.723
+                  rank: 2
+                count: 3
+                threshold: 0.1422
+                user_info:
+                  status: existing_user
+                  total_events: 15
+                  total_purchases: 5
+  /recommend:
+    post:
+      tags:
+      - Recommendations
+      summary: Рекомендации с параметрами
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/recommend_body"
+        required: true
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              example:
+                user_id: 12345
+                recommendations: []
+                parameters:
+                  top_k: 5
+                  threshold: 0.2
+                  actual_count: 3
+  /user_info/{user_id}:
+    get:
+      tags:
+      - Users
+      summary: Информация о пользователе
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              example:
+                user_id: 12345
+                status: found
+                total_events: 15
+                total_purchases: 5
+                purchase_rate: 0.75
+components:
+  schemas:
+    recommend_body:
+      required:
+      - user_id
+      type: object
+      properties:
+        user_id:
+          type: integer
+        top_k:
+          type: integer
+          default: 3
+        threshold:
+          type: number
+          default: 0.1422
